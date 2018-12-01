@@ -1,0 +1,10 @@
+Hypothesis: Given some set of features extracted from only a users CPU usage, and a timestamp range from which these features are extracted, one can infer the specific user
+
+Raw fields from Sherlock: [cpu_total, timestamp, user]
+Features extracted from fields: [day_of_week (one hot vector), hour_of_day (one hot vector), count_under_10 (int), count_in_10_75 (int), count_over_75 (int)]
+
+Potential future features to add: [standard_deviation (real), skew (real), trapezoidal_area (real)]
+
+Windows for sampling are every hour of every day of the week from the first sample on April 1, 2016 @ 12am (1459468800217) to June 30, 2016 @ 11:59pm (1467331199248)
+
+There are a total of 48 users in this particular dataset.
