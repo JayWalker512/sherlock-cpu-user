@@ -36,32 +36,48 @@ def main(argv):
         timestampRanges = getWindowsByHour(1459468800000, 1467331200000)
         print("Number of windows to iterate over: " + str(len(timestampRanges)))
         
-        for userId in range(13,numUsersInDataset):
-            for window in timestampRanges:
-                feature1Query = "select count(cast (cpu_total as float)) from sherlock where timestamp >= \""+str(window[0])+"\" and timestamp <= \""+str(window[1])+"\" and cpu_total < 10.0 and user = " + str(userId)
-                feature1 = sqlcursor.execute(feature1Query).fetchone()[0]
-                feature2Query = "select count(cast (cpu_total as float)) from sherlock where timestamp >= \""+str(window[0])+"\" and timestamp <= \""+str(window[1])+"\" and cpu_total >= 10.0 and cpu_total < 75.0 and user = " + str(userId)
-                feature2 = sqlcursor.execute(feature2Query).fetchone()[0]
-                feature3Query = feature2Query = "select count(cast (cpu_total as float)) from sherlock where timestamp >= \""+str(window[0])+"\" and timestamp <= \""+str(window[1])+"\" and cpu_total >= 75.0 and user = " + str(userId)
-                feature3 = sqlcursor.execute(feature3Query).fetchone()[0]
-                dayOfWeekOneHot = oneHot(int(timestampMillisToDayOfWeek(window[0])), 6)
-                hourOfDayOneHot = oneHot(int(timestampMillisToHourOfDay(window[0])), 23)
-                
-                rowToWrite = []
-                rowToWrite.append(feature1)
-                rowToWrite.append(feature2)
-                rowToWrite.append(feature3)
+        for window in timestampRanges:
+            dayOfWeekOneHot = oneHot(int(timestampMillisToDayOfWeek(window[0])), 6)
+            hourOfDayOneHot = oneHot(int(timestampMillisToHourOfDay(window[0])), 23)
+            featuresWindow = [] #just the set of features we're calculating in this window
+            for i in range(0, numUsersInDataset):
+                featuresUser = []
+                featuresUser.append(0) #cpu < 10
+                featuresUser.append(0) #cpu >= 10 < 75
+                featuresUser.append(0) # cpu > 75
                 for n in dayOfWeekOneHot:
-                    rowToWrite.append(n)
+                    featuresUser.append(n)
                 for n in hourOfDayOneHot:
-                    rowToWrite.append(n)
+                    featuresUser.append(n)
                     
-                #last column is the userId
-                rowToWrite.append(userId)
+                featuresUser.append(window[0])
+                featuresUser.append(window[1])
+                featuresUser.append(i) #user id
+                featuresWindow.append(featuresUser)
+            
+            feature1Query = "select count(cpu_total),user from sherlock where timestamp >= \""+str(window[0])+"\" and timestamp <= \""+str(window[1])+"\" and cast(cpu_total as float) < 10.0 group by user"
+            results = sqlcursor.execute(feature1Query).fetchall()
+            #print(results)
+            for k in results:
+                featuresWindow[int(k[1])][0] = k[0]
+            
+            
+            feature2Query = "select count(cpu_total),user from sherlock where timestamp >= \""+str(window[0])+"\" and timestamp <= \""+str(window[1])+"\" and cast(cpu_total as float) >= 10.0 and cast(cpu_total as float) < 75.0 group by user"
+            results = sqlcursor.execute(feature2Query).fetchall()
+            #print(results)
+            for k in results:
+                featuresWindow[int(k[1])][1] = k[0]
+            
+            feature3Query = "select count(cpu_total),user from sherlock where timestamp >= \""+str(window[0])+"\" and timestamp <= \""+str(window[1])+"\" and cast(cpu_total as float) > 75.0 group by user"
+            results = sqlcursor.execute(feature3Query).fetchall()
+            #print(results)
+            for k in results:
+                featuresWindow[int(k[1])][2] = k[0]
+            
+            for rowToWrite in featuresWindow:
                 print(rowToWrite)
-
                 tsvWriter.writerow(rowToWrite)
-        
+    
         
 if __name__ == "__main__":
     main(sys.argv)
