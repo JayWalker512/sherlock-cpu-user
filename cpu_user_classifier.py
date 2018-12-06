@@ -1,5 +1,8 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
+
+from __future__ import print_function
+from __future__ import division
 """
 Created on Fri Nov 30 20:05:47 2018
 
@@ -13,13 +16,14 @@ Created on Thu Nov  1 14:45:46 2018
 
 @author: jaywalker
 """
-from __future__ import print_function
-from __future__ import division
+
 import sys
 import csv
 import io
 import math
 import random
+import pickle
+
 
 import numpy
 import matplotlib.pyplot as plt
@@ -56,7 +60,7 @@ def scaleFeatures(listOfRows):
 
 def loadCSV(filename, omitHeader=False):
     with io.open(filename, encoding="ISO-8859-1") as tsvFile:
-        csvReader = csv.reader(tsvFile, delimiter=',', quotechar='\"')
+        csvReader = csv.reader(tsvFile, delimiter='\t', quotechar='\"')
         rowList = [list(row) for row in csvReader]
         
         if (omitHeader):
@@ -95,6 +99,10 @@ def foldTrainTest(X, Y, classifier, nFolds=10):
         for i in range(0,len(Xtest)):
             if response[i] == Ytest[i]:
                 correct += 1
+                
+    s = pickle.dumps(classifier)
+    with open('classifier.pickle', 'w') as f:
+        print(s, file=f)
     
     plotLearningCurve(classifier, classifier.__class__.__name__, X, Y)#, cv=kf.split(X))
             
@@ -105,12 +113,13 @@ def testMLPC(X, Y, nFolds=10):
     numFeatures = len(X[0])
     #architectureTuple = (numFeatures, int(math.floor((3/4)*numFeatures)), int(math.floor((1/2)*numFeatures)))
     #architectureTuple = (numFeatures, int(math.floor((3/4)*numFeatures)), int(math.floor((1/2)*numFeatures)), int(math.floor((1/4)*numFeatures)))
-    architectureTuple = (numFeatures * 4)
+    architectureTuple = (numFeatures * 20)
+    #architectureTuple = (numFeatures)
     #architectureTuple = (numFeatures * 2, numFeatures, int(math.floor((3/4)*numFeatures)), int(math.floor((1/2)*numFeatures)), int(math.floor((1/4)*numFeatures)))
     #architectureTuple = (50, 50, 50, 50, 50)
-    #print("Hidden layer sizes: " + str(architectureTuple))
+    print("Hidden layer sizes: " + str(architectureTuple))
     #mlp = MLPRegressor(activation='relu', hidden_layer_sizes=architectureTuple, max_iter=1000)
-    mlp = MLPClassifier(activation='relu', hidden_layer_sizes=architectureTuple, max_iter=1000)
+    mlp = MLPClassifier(activation='relu', hidden_layer_sizes=architectureTuple, max_iter=200)
     print("MLPC Accuracy (" + str(nFolds) + "-fold):" + str(foldTrainTest(X, Y, mlp, nFolds)))
     
 def testLogisticRegression(X, Y, nFolds=10):
@@ -119,7 +128,7 @@ def testLogisticRegression(X, Y, nFolds=10):
     print("Logistic Regression Accuracy (" + str(nFolds) + "-fold):" + str(foldTrainTest(X, Y, clf, nFolds)))
     
 def testDecisionTree(X, Y, nFolds=10):
-    clf = DecisionTreeClassifier()
+    clf = DecisionTreeClassifier(max_depth=10)
     print("Decision Tree Accuracy (" + str(nFolds) + "-fold):" + str(foldTrainTest(X, Y, clf, nFolds)))
 
 #this function is essentially verbatim from: http://scikit-learn.org/0.15/auto_examples/plot_learning_curve.html
@@ -183,7 +192,7 @@ def plotLearningCurve(estimator, title, X, y, ylim=None, cv=None,
     return plt
 
 def main(argv):
-    X = loadCSV(argv[1], omitHeader=True) #load the un-scaled data set with classificatioins
+    X = loadCSV(argv[1], omitHeader=False) #load the un-scaled data set with classificatioins
     #Xheaders = getHeaderListFromCSV(argv[1], ",")
 
     #first off, shuffle the order so the classes are interspersed
@@ -198,28 +207,19 @@ def main(argv):
         
     #print(Y)
     
-    #remove classifications (and class description) from X
+    #remove classifications and timestamps from X
     for i in range(0,len(X)):
-        X[i] = X[i][:-2]
+        X[i] = X[i][:-3]
         
     #print(X)
     Xprepared = scaleFeatures(X)
     
-    #replace Y textual labels with binary labels 
-    for i in range(0, len(Y)):
-        if (Y[i] == "Normal"):
-            #Y[i] = [1,0]
-            Y[i] = 0
-        else:
-            #Y[i] = [0,1]
-            Y[i] = 1
-    
     #print(Y)
     Y = numpy.asarray(Y)
     
-    testMLPC(Xprepared, Y)
-    testLogisticRegression(Xprepared, Y)
-    testDecisionTree(numpy.asarray(X), Y)
+    #testMLPC(Xprepared, Y)
+    #testLogisticRegression(Xprepared, Y)
+    testDecisionTree(Xprepared, Y)
 
 if __name__ == "__main__":
     main(sys.argv)
