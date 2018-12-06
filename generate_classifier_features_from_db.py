@@ -6,6 +6,7 @@ Created on Sat Dec  1 11:57:38 2018
 @author: jaywalker
 """
 from __future__ import print_function
+from __future__ import division
 from common import *
 import sqlite3
 import csv
@@ -36,6 +37,8 @@ def main(argv):
         timestampRanges = getWindowsByHour(1459468800000, 1467331200000)
         print("Number of windows to iterate over: " + str(len(timestampRanges)))
         
+        progress = 0
+        completedProgress = len(timestampRanges)
         for window in timestampRanges:
             dayOfWeekOneHot = oneHot(int(timestampMillisToDayOfWeek(window[0])), 6)
             hourOfDayOneHot = oneHot(int(timestampMillisToHourOfDay(window[0])), 23)
@@ -75,8 +78,11 @@ def main(argv):
                 featuresWindow[int(k[1])][2] = k[0]
             
             for rowToWrite in featuresWindow:
-                print(rowToWrite)
+                #print(rowToWrite)
                 tsvWriter.writerow(rowToWrite)
+                
+            print("Progress: " + str((float(progress)/float(completedProgress)) * 100.0) + "%")
+            progress += 1
     
         
 if __name__ == "__main__":
