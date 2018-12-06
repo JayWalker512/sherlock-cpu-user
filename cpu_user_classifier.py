@@ -34,6 +34,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold
+from sklearn.metrics import f1_score
 
 def getHeaderListFromCSV(filename, delimiter):
     with io.open(filename, encoding="ISO-8859-1") as csvFile:
@@ -89,24 +90,27 @@ def foldTrainTest(X, Y, classifier, nFolds=10):
     kf = KFold(n_splits=nFolds) #maybe try the shuffle param on the activity recognition stuff?
     correct = 0
     outOf = 0
+    f1Subtotal = 0
     for train_index, test_index in kf.split(X):
         Xtrain, Xtest = X[train_index], X[test_index]
         Ytrain, Ytest = Y[train_index], Y[test_index]
+        
+        #checking to make sure test and train sets are disjoint
+        #print("train indices: " + str(train_index))
+        #print("test indices: " + str(test_index))
+        
         outOf += len(Ytest) #average accuracy will be calculated as (correct / outOf)
         classifier.fit(Xtrain, Ytrain)
 
         response = classifier.predict(Xtest)
+        f1Subtotal += f1_score(Ytest, response, average='micro')
         for i in range(0,len(Xtest)):
             if response[i] == Ytest[i]:
                 correct += 1
-                
-    s = pickle.dumps(classifier)
-    with open('classifier.pickle', 'w') as f:
-        print(s, file=f)
     
     plotLearningCurve(classifier, classifier.__class__.__name__, X, Y)#, cv=kf.split(X))
-            
-    return correct / outOf
+    
+    return [correct / outOf, f1Subtotal / nFolds]
 
 def testMLPC(X, Y, nFolds=10):
     #construct the neural network 
@@ -116,20 +120,10 @@ def testMLPC(X, Y, nFolds=10):
     architectureTuple = (numFeatures, numFeatures)
     #architectureTuple = (numFeatures)
     #architectureTuple = (numFeatures * 2, numFeatures, int(math.floor((3/4)*numFeatures)), int(math.floor((1/2)*numFeatures)), int(math.floor((1/4)*numFeatures)))
-    #architectureTuple = (50, 50, 50, 50, 50)
     print("Hidden layer sizes: " + str(architectureTuple))
-    #mlp = MLPRegressor(activation='relu', hidden_layer_sizes=architectureTuple, max_iter=1000)
     mlp = MLPClassifier(activation='relu', hidden_layer_sizes=architectureTuple, max_iter=200)
-    print("MLPC Accuracy (" + str(nFolds) + "-fold):" + str(foldTrainTest(X, Y, mlp, nFolds)))
-    
-def testLogisticRegression(X, Y, nFolds=10):
-    #construct logisitic regressor for comparison
-    clf = LogisticRegression()
-    print("Logistic Regression Accuracy (" + str(nFolds) + "-fold):" + str(foldTrainTest(X, Y, clf, nFolds)))
-    
-def testDecisionTree(X, Y, nFolds=10):
-    clf = DecisionTreeClassifier(max_depth=10)
-    print("Decision Tree Accuracy (" + str(nFolds) + "-fold):" + str(foldTrainTest(X, Y, clf, nFolds)))
+    accuracy, f1 = foldTrainTest(X, Y, mlp, nFolds)
+    print("MLPC Accuracy (" + str(nFolds) + "-fold):" + str(accuracy) + ", F1-Score: " + str(f1))
 
 #this function is essentially verbatim from: http://scikit-learn.org/0.15/auto_examples/plot_learning_curve.html
 def plotLearningCurve(estimator, title, X, y, ylim=None, cv=None,

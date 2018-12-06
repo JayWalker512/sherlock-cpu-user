@@ -9,7 +9,6 @@ from __future__ import print_function
 import sys
 import csv
 import io
-import sqlite3
 
 def extractFields(tsvRow, fieldIndices=[]):
     extracted = []
