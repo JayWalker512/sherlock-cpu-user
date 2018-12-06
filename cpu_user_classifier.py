@@ -113,7 +113,7 @@ def testMLPC(X, Y, nFolds=10):
     numFeatures = len(X[0])
     #architectureTuple = (numFeatures, int(math.floor((3/4)*numFeatures)), int(math.floor((1/2)*numFeatures)))
     #architectureTuple = (numFeatures, int(math.floor((3/4)*numFeatures)), int(math.floor((1/2)*numFeatures)), int(math.floor((1/4)*numFeatures)))
-    architectureTuple = (numFeatures * 20)
+    architectureTuple = (numFeatures, numFeatures)
     #architectureTuple = (numFeatures)
     #architectureTuple = (numFeatures * 2, numFeatures, int(math.floor((3/4)*numFeatures)), int(math.floor((1/2)*numFeatures)), int(math.floor((1/4)*numFeatures)))
     #architectureTuple = (50, 50, 50, 50, 50)
@@ -217,9 +217,9 @@ def main(argv):
     #print(Y)
     Y = numpy.asarray(Y)
     
-    #testMLPC(Xprepared, Y)
+    testMLPC(Xprepared, Y)
     #testLogisticRegression(Xprepared, Y)
-    testDecisionTree(Xprepared, Y)
+    #testDecisionTree(Xprepared, Y)
 
 if __name__ == "__main__":
     main(sys.argv)
