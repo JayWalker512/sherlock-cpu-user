@@ -16,12 +16,16 @@ import math
 #millis per hour: 3600000
 #millis per day: 86400000
 
+#Takes a Unix epoch timestamp in milliseconds and returns a number 0-6 for the day of the week it is on
 def timestampMillisToDayOfWeek(timestampMillis):
     return time.strftime("%w", time.strptime(time.ctime(math.floor(timestampMillis/1000.0))))
     
+#Takes a Unix epoch timestamp in milliseconds and returns a number 0-23 for the hour of the day it occurred on
 def timestampMillisToHourOfDay(timestampMillis):
     return time.strftime("%H", time.strptime(time.ctime(math.floor(timestampMillis/1000.0))))
 
+#Returns a list of 2-element lists represending the start timestamp and end timestamp
+#of every hour between startTimestamp and endTimestamp
 def getWindowsByHour(startTimestamp, endTimestamp):
     listOfTimestamps = []
     tsInc = 3600000 #millis per hour
