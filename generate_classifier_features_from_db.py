@@ -23,6 +23,8 @@ def oneHot(value, max):
     
     return vec;
 
+#Takes as an argument the SQLite3 db filename to extract features from.
+#Creates a file cpu_classifier_features.tsv containing the extracted features.
 def main(argv):
     sqldb = sqlite3.connect(argv[1]) #maybe make this a parameter?
     sqlcursor = sqldb.cursor()

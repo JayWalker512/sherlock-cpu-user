@@ -10,6 +10,10 @@ import sys
 import csv
 import io
 
+#Pass a list via tsvRow, and a list of indices to extract from tsvRow
+#Returns a list of the fields matching the indices passed in fieldIndices
+#tsvRow: list to extract fields/elements from
+#fieldIndices: list of indices referring to those elements to extract from tsvRow
 def extractFields(tsvRow, fieldIndices=[]):
     extracted = []
     for i in fieldIndices:
@@ -17,8 +21,8 @@ def extractFields(tsvRow, fieldIndices=[]):
         
     return extracted
 
+#Pass path to SherLock data (anon_T4.tsv) by argument
 def main(argv):
-    #extractedRows = []
     with io.open(argv[1], encoding="ISO-8859-1") as tsvFile:
         tsvReader = csv.reader(tsvFile, delimiter='\t', quotechar='\"')
         
@@ -39,9 +43,7 @@ def main(argv):
                         listOfUsers.append(er[2])
                         userId = listOfUsers.index(er[2])
                         
-                    er[2] = userId
-                    #extractedRows.append(er)
-                    #print(er)    
+                    er[2] = userId 
                     tsvWriter.writerow(er)
         
         

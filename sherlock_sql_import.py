@@ -11,12 +11,18 @@ import csv
 import io
 import sqlite3
 
+#Loads a TSV in to memory as a list of dictionaries. 
+#filename: the TSV file to load
+#columnNames: a list of column titles
 def getDictListFromTSV(filename, columnNames):
     with io.open(filename, encoding="ISO-8859-1") as tsvFile:
         tsvReader = csv.DictReader(tsvFile, delimiter='\t', quotechar='\"', fieldnames=columnNames, restval='')
         tsvDictList = [dict(row) for row in tsvReader]
         return tsvDictList
 
+#Loads the first row from a TSV file to use as a list oc column/header names. Returns a list of the column names.
+#filename: the TSV file to read from
+#delimiter: In this case a tab. Not actually used in the code below.
 def getHeaderListFromTSV(filename, delimiter):
     with io.open(filename, encoding="ISO-8859-1") as tsvFile:
         try:
@@ -37,6 +43,8 @@ def getHeaderListFromTSV(filename, delimiter):
             print(sys.exc_info())
             pass
 
+#Run this script with tsv file to read fro as the only argument.
+#Creates a file called 'export.db' which is a SQLite3 database.
 def main(argv):
     tsvFilename = argv[1]
     tsvHeaderFilename = argv[2]

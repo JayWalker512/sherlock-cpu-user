@@ -24,7 +24,6 @@ import math
 import random
 import pickle
 
-
 import numpy
 import matplotlib.pyplot as plt
 from sklearn.learning_curve import learning_curve
@@ -36,29 +35,13 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold
 from sklearn.metrics import f1_score
 
-def getHeaderListFromCSV(filename, delimiter):
-    with io.open(filename, encoding="ISO-8859-1") as csvFile:
-        try:
-            buff = []
-            while True:
-                line = csvFile.read(1)
-                buff.append(line)
-                    
-                if line == "" or line == '\n':
-                    break
-                        
-            bufferString = ''.join([str(x) for x in buff])
-            return bufferString.split('\t')
-
-        except (KeyboardInterrupt, Exception) as e:
-            sys.stdout.flush()
-            print(e)
-            print(sys.exc_info())
-            pass
-
+#SCale features. Uses default scaling provided by sklearn.
 def scaleFeatures(listOfRows):
     return preprocessing.scale(listOfRows)
 
+#Loads a CSV file in to memory as a list of lists.
+#filename: the CSV file to load
+#omitHeader: Drop or include the first row of the CSV in the returned lists.
 def loadCSV(filename, omitHeader=False):
     with io.open(filename, encoding="ISO-8859-1") as tsvFile:
         csvReader = csv.reader(tsvFile, delimiter='\t', quotechar='\"')
@@ -69,7 +52,7 @@ def loadCSV(filename, omitHeader=False):
             
         return rowList
             
-#input a vector of reals and ouput a one-hot vector indicating the max element
+#Input a vector of reals and ouput a one-hot vector indicating the max element
 def maxVector(inVector):
     maxIndex = 0
     maxValue = -999999
@@ -85,7 +68,13 @@ def maxVector(inVector):
             inVector[i] = 0
             
     return inVector
-    
+ 
+#Trains a classifier on data in X with labels Y using nFolds for cross validation. Also plots a learning curve. 
+#Returns a 2-element list of classifier accuracy and f1-score values.
+#X: training data
+#Y: labels for training data
+#classifier: SkLearn classifier object such as MLPClassifier, etc. 
+#nFolds: number of folds to use for cross validation.    
 def foldTrainTest(X, Y, classifier, nFolds=10):
     kf = KFold(n_splits=nFolds) #maybe try the shuffle param on the activity recognition stuff?
     correct = 0
@@ -112,6 +101,10 @@ def foldTrainTest(X, Y, classifier, nFolds=10):
     
     return [correct / outOf, f1Subtotal / nFolds]
 
+#Set up MLP classifier and train it using the foldTrainTest function.
+#X: training examples
+#Y: labels
+#nFolds: number of folds to use for cross validation
 def testMLPC(X, Y, nFolds=10):
     #construct the neural network 
     numFeatures = len(X[0])
@@ -185,9 +178,9 @@ def plotLearningCurve(estimator, title, X, y, ylim=None, cv=None,
     plt.legend(loc="best")
     return plt
 
+#Loads a file passed by argument to use for classification
 def main(argv):
     X = loadCSV(argv[1], omitHeader=False) #load the un-scaled data set with classificatioins
-    #Xheaders = getHeaderListFromCSV(argv[1], ",")
 
     #first off, shuffle the order so the classes are interspersed
     #use a predefined seed so that we get the same results repeatedly
